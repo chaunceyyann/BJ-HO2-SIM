@@ -11,12 +11,13 @@ from importer.StrategyImporter import StrategyImporter
 
 GAMES = 20000
 SHOE_SIZE = 6
-SHOE_PENETRATION = 0.25
-BET_SPREAD = 20.0
+SHOE_PENETRATION = 0.17 # 1 deck pen
+BET_SPREAD = 12.0
 
 DECK_SIZE = 52.0
 CARDS = {"Ace": 11, "Two": 2, "Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8, "Nine": 9, "Ten": 10, "Jack": 10, "Queen": 10, "King": 10}
 BASIC_OMEGA_II = {"Ace": 0, "Two": 1, "Three": 1, "Four": 2, "Five": 2, "Six": 2, "Seven": 1, "Eight": 0, "Nine": -1, "Ten": -2, "Jack": -2, "Queen": -2, "King": -2}
+HI_OPT_II = {"Ace": 0, "Two": 1, "Three": 1, "Four": 2, "Five": 2, "Six": 1, "Seven": 1, "Eight": 0, "Nine": 0, "Ten": -2, "Jack": -2, "Queen": -2, "King": -2}
 
 BLACKJACK_RULES = {
     'triple7': False,  # Count 3x7 as a blackjack
@@ -101,7 +102,7 @@ class Shoe(object):
         """
         Add the dealt card to current count.
         """
-        self.count += BASIC_OMEGA_II[card.name]
+        self.count += HI_OPT_II[card.name]
         self.count_history.append(self.truecount())
 
     def truecount(self):
@@ -459,7 +460,7 @@ if __name__ == "__main__":
 
     moneys = []
     bets = []
-    countings = []
+    counts = []
     nb_hands = 0
     for g in range(GAMES):
         game = Game()
@@ -470,20 +471,22 @@ if __name__ == "__main__":
 
         moneys.append(game.get_money())
         bets.append(game.get_bet())
-        countings += game.shoe.count_history
+        counts += game.shoe.count_history
 
         print("WIN for Game no. %d: %s (%s bet)" % (g + 1, "{0:.2f}".format(game.get_money()), "{0:.2f}".format(game.get_bet())))
 
-    sume = 0.0
+    sum = 0.0
     total_bet = 0.0
     for value in moneys:
-        sume += value
+        sum += value
     for value in bets:
         total_bet += value
 
-    print "\n%d hands overall, %0.2f hands per game on average" % (nb_hands, float(nb_hands) / GAMES)
-    print "%0.2f total bet" % total_bet
-    print("Overall winnings: {} (edge = {} %)".format("{0:.2f}".format(sume), "{0:.3f}".format(100.0*sume/total_bet)))
+    # print "\n%d hands overall, %0.2f hands per game on average" % (nb_hands, float(nb_hands) / GAMES)
+    print(f"{nb_hands} hands overall, {nb_hands/GAMES:.2f} hands per game on average")
+    # print "%0.2f total bet" % total_bet
+    print(f"{total_bet:.2f} total bet")
+    print("Overall winnings: {} (edge = {} %)".format("{0:.2f}".format(sum), "{0:.3f}".format(100.0*sum/total_bet)))
 
     moneys = sorted(moneys)
     fit = stats.norm.pdf(moneys, np.mean(moneys), np.std(moneys))  # this is a fitting indeed
@@ -492,6 +495,6 @@ if __name__ == "__main__":
     pl.show()
 
     plt.ylabel('count')
-    plt.plot(countings, label='x')
+    plt.plot(counts, label='x')
     plt.legend()
     plt.show()
